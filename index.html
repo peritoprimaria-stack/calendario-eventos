@@ -603,7 +603,6 @@ input,select,textarea{font-family:inherit;}
   <span class="legend-item"><i class="ti ti-puzzle" style="color:var(--inicial)"></i>Inicial</span>
   <span class="legend-item"><i class="ti ti-book-2" style="color:var(--primario)"></i>Primario</span>
   <span class="legend-item"><i class="ti ti-school" style="color:var(--secundario)"></i>Secundario</span>
-  <span class="legend-item"><span class="dot" style="background:var(--fijo)"></span>Uso habitual</span>
 </div>
 
 <div class="controls">
@@ -1034,12 +1033,6 @@ function actualizarStats_(){
 }
 
 function itemsDelDia_(fechaISO, nombreDia){
-  const fijos = DATA.horariosFijos
-    .filter(h => h.diaSemana === nombreDia)
-    .filter(h => filtroEspacio === 'todos' || h.espacio === filtroEspacio)
-    .filter(h => filtroNivel === 'todos' || h.nivel === filtroNivel)
-    .map(h => ({ tipo:'fijo', horaInicio:h.horaInicio, horaFin:h.horaFin, espacio:h.espacio, descripcion:h.descripcion, nivel:h.nivel }));
-
   const eventos = DATA.eventos
     .filter(e => e.fecha === fechaISO)
     .filter(e => e.estado !== 'Cancelado')
@@ -1047,7 +1040,7 @@ function itemsDelDia_(fechaISO, nombreDia){
     .filter(e => filtroNivel === 'todos' || e.nivel === filtroNivel)
     .map(e => ({ tipo:'evento', ...e }));
 
-  return fijos.concat(eventos).sort((a,b) => a.horaInicio.localeCompare(b.horaInicio));
+  return eventos.sort((a,b) => a.horaInicio.localeCompare(b.horaInicio));
 }
 
 function fichaElemento_(it){
@@ -1221,9 +1214,14 @@ function mostrarResultadoRevision_(conflictos){
     box.innerHTML = '✓ No hay superposiciones con horarios fijos ni otros eventos.';
   } else {
     box.className = 'conflict-box warn';
-    box.innerHTML = '⚠ Este horario se superpone con:<ul>' +
-      conflictos.map(c => `<li>${c.tipo === 'fijo' ? 'Uso habitual' : 'Otro evento'}: ${escapeHtml_(c.descripcion)} (${c.horaInicio}–${c.horaFin}${c.nivel ? ', '+c.nivel : ''})</li>`).join('') +
-      '</ul>Podés cargarlo igual — la coordinación entre niveles se resuelve por fuera del sistema.';
+    const items = conflictos.map(c => {
+      if(c.tipo === 'fijo'){
+        return `<li><b>Espacio ocupado por ${escapeHtml_(c.descripcion)}</b>${c.nivel ? ' ('+escapeHtml_(c.nivel)+')' : ''}, de ${c.horaInicio} a ${c.horaFin}. Confirmá con el/la directivo/a de ese nivel antes de cargar el evento.</li>`;
+      }
+      return `<li>Ya hay otro evento cargado en ese horario: <b>${escapeHtml_(c.descripcion)}</b> (${escapeHtml_(c.nivel)}${c.estado ? ', '+escapeHtml_(c.estado) : ''}), de ${c.horaInicio} a ${c.horaFin}.</li>`;
+    }).join('');
+    box.innerHTML = (conflictos.length === 1 ? '⚠ Encontramos una superposición:' : '⚠ Encontramos superposiciones:') +
+      '<ul>' + items + '</ul>Podés cargarlo igual — la coordinación final la resuelven los niveles entre sí.';
   }
 }
 
@@ -1376,7 +1374,12 @@ document.getElementById('btnGuardarEdicion').addEventListener('click', async ()=
   try{
     const resp = await apiPost_(datos);
     if(!resp.ok) throw new Error(resp.error);
-    mostrarToast('Evento actualizado. Vuelve a estar pendiente de aprobación.', 'success');
+    if(resp.conflictos && resp.conflictos.length){
+      const desc = resp.conflictos.map(c => c.tipo === 'fijo' ? `Espacio ocupado por ${c.descripcion}` : `otro evento (${c.descripcion})`).join(' · ');
+      mostrarToast('Evento actualizado, pero ojo: ' + desc + '. Confirmá con quien corresponda.', 'error');
+    } else {
+      mostrarToast('Evento actualizado. Vuelve a estar pendiente de aprobación.', 'success');
+    }
     cerrarOverlay_('overlayEditar');
     cargarDatos();
   }catch(e){

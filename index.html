@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendario de Eventos · Espacios Compartidos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
+<style>
+/* ============================================================
+   TOKENS
+============================================================ */
+:root{
+  --paper:#FAF7F0;
+  --paper-line:#E7E1D3;
+  --card:#FFFFFF;
+  --ink:#2B2B26;
+  --ink-soft:#6E6C60;
+  --ink-faint:#A6A296;
+
+  --inicial:#E8703A;
+  --inicial-bg:#FCE9DE;
+  --primario:#2E5FA3;
+  --primario-bg:#DFE8F5;
+  --secundario:#1A9E5C;
+  --secundario-bg:#DDF1E7;
+  --fijo:#8B8B83;
+  --fijo-bg:#EFEDE6;
+
+  --pendiente:#B9860B;
+  --pendiente-bg:#FBF0D6;
+  --confirmado:#0F8B6C;
+  --confirmado-bg:#DDF1E7;
+  --rechazado:#C1443C;
+  --rechazado-bg:#FBE4E1;
+  --cancelado:#8A887F;
+  --cancelado-bg:#EDEBE3;
+
+  --radius:14px;
+  --shadow:0 1px 2px rgba(43,43,38,0.06), 0 6px 20px rgba(43,43,38,0.06);
+  --font-display:'Fraunces', serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'IBM Plex Mono', monospace;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;}
+input,select,textarea{font-family:inherit;}
+
+/* subtle paper texture: faint horizontal rules */
+.paper-bg{
+  background-image:repeating-linear-gradient(
+    to bottom, transparent, transparent 34px, var(--paper-line) 35px
+  );
+}
+
+/* ============================================================
+   MASTHEAD
+============================================================ */
+.masthead{
+  max-width:1180px;
+  margin:0 auto;
+  background:var(--card);
+  border-bottom:2px solid var(--paper-line);
+  position:relative;
+}
+.masthead::after{
+  content:'';
+  position:absolute;
+  left:0; right:0; bottom:-2px;
+  height:5px;
+  background:repeating-linear-gradient(
+    90deg,
+    var(--inicial) 0 48px,
+    var(--primario) 48px 96px,
+    var(--secundario) 96px 144px
+  );
+}
+.masthead-top{
+  padding:28px 24px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:20px;
+  flex-wrap:wrap;
+}
+.masthead-eyebrow{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  margin:0 0 4px;
+}
+.masthead h1{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:clamp(26px, 3.6vw, 36px);
+  margin:0;
+  letter-spacing:-0.01em;
+}
+.masthead .institucion{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-weight:400;
+  color:var(--ink-soft);
+  font-size:15px;
+  margin:4px 0 0;
+}
+.masthead-doodle{flex:none; margin-top:2px;}
+
+.stats-bar{
+  max-width:1180px;
+  margin:0 auto;
+  padding:16px 24px 0;
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:10px;
+}
+.stat-card{
+  background:var(--card);
+  border:1px solid var(--paper-line);
+  border-radius:10px;
+  padding:10px 14px;
+}
+.stat-card b{
+  display:block;
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:21px;
+  line-height:1.2;
+}
+.stat-card span{
+  font-size:9.5px;
+  color:var(--ink-soft);
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+@media(max-width:640px){
+  .stats-bar{grid-template-columns:repeat(2,1fr);}
+}
+
+/* ============================================================
+   CONTROLS BAR
+============================================================ */
+.controls{
+  max-width:1180px;
+  margin:16px auto 0;
+  padding:0 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.legend{
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 24px;
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+  font-size:12px;
+  color:var(--ink-soft);
+  align-items:center;
+}
+.legend-item{display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.legend-item i{font-size:15px;}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.tab{
+  border:1.5px solid var(--paper-line);
+  background:var(--card);
+  color:var(--ink-soft);
+  padding:7px 14px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.tab[data-active="true"]{color:#fff;border-color:transparent;}
+.tab[data-nivel="todos"][data-active="true"]{background:var(--ink);}
+.tab[data-nivel="Inicial"][data-active="true"]{background:var(--inicial);}
+.tab[data-nivel="Primario"][data-active="true"]{background:var(--primario);}
+.tab[data-nivel="Secundario"][data-active="true"]{background:var(--secundario);}
+.tab:hover{border-color:var(--ink-faint);}
+
+.select-espacio{
+  border:1.5px solid var(--paper-line);
+  background:var(--card);
+  color:var(--ink);
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:500;
+  cursor:pointer;
+}
+.controls-right{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.btn-exportar{
+  border:1.5px solid var(--ink);
+  background:var(--card);
+  color:var(--ink);
+  padding:8px 14px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+.btn-exportar:hover{background:var(--ink); color:#fff;}
+
+.week-nav{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  max-width:1180px;
+  margin:14px auto 0;
+  padding:0 24px;
+}
+.week-nav button{
+  border:1.5px solid var(--paper-line);
+  background:var(--card);
+  width:32px;height:32px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:15px;
+  color:var(--ink);
+}
+.week-nav button:hover{border-color:var(--ink);}
+.week-label{
+  font-family:var(--font-mono);
+  font-size:13px;
+  color:var(--ink-soft);
+  flex:1;
+}
+.btn-hoy{
+  border:1.5px solid var(--ink);
+  background:transparent;
+  color:var(--ink);
+  padding:6px 12px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* ============================================================
+   WEEK GRID
+============================================================ */
+.week-wrap{
+  max-width:1180px;
+  margin:18px auto 100px;
+  padding:0 24px;
+}
+.week-grid{
+  display:grid;
+  grid-template-columns:repeat(7, minmax(150px,1fr));
+  gap:12px;
+  overflow-x:auto;
+  padding-bottom:8px;
+}
+.day-col{
+  min-width:150px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.day-head{
+  text-align:center;
+  padding-bottom:8px;
+  border-bottom:1.5px solid var(--paper-line);
+}
+.day-head .dow{
+  font-family:var(--font-mono);
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+}
+.day-head .num{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:20px;
+}
+.day-head[data-today="true"] .num{color:var(--secundario);}
+.day-empty{
+  font-size:11px;
+  color:var(--ink-faint);
+  text-align:center;
+  padding:16px 4px 8px;
+  font-style:italic;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+}
+.day-empty i{font-size:17px; opacity:.7;}
+
+/* ============================================================
+   FICHA CARD — signature element
+============================================================ */
+.ficha{
+  position:relative;
+  background:var(--tab-bg, var(--card));
+  border:1px solid transparent;
+  border-radius:10px;
+  box-shadow:var(--shadow);
+  padding:10px 12px 10px 18px;
+  cursor:pointer;
+  transition:transform .12s ease;
+}
+.ficha:hover{transform:translateY(-1px);}
+.ficha::before{
+  content:'';
+  position:absolute;
+  left:0; top:0; bottom:0;
+  width:6px;
+  border-radius:10px 0 0 10px;
+  background:var(--tab-color, var(--fijo));
+}
+.ficha::after{
+  /* punched holes, like a fichero */
+  content:'';
+  position:absolute;
+  left:2px; top:6px; bottom:6px;
+  width:2px;
+  background-image:radial-gradient(circle, rgba(255,255,255,.9) 1px, transparent 1.4px);
+  background-size:2px 9px;
+  opacity:.6;
+}
+.ficha.fijo{cursor:default; background:var(--fijo-bg); box-shadow:none; border-color:var(--paper-line);}
+.ficha .hora{
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--ink-soft);
+}
+.ficha .titulo{
+  font-size:13px;
+  font-weight:600;
+  margin:2px 0 4px;
+  line-height:1.25;
+}
+.ficha .meta{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:6px;
+}
+.badge{
+  font-family:var(--font-mono);
+  font-size:10px;
+  letter-spacing:.02em;
+  padding:2px 7px;
+  border-radius:999px;
+  font-weight:500;
+}
+.badge.Pendiente{color:var(--pendiente);background:var(--pendiente-bg);}
+.badge.Confirmado{color:var(--confirmado);background:var(--confirmado-bg);}
+.badge.Rechazado{color:var(--rechazado);background:var(--rechazado-bg);}
+.badge.Cancelado{color:var(--cancelado);background:var(--cancelado-bg);}
+.nivel-tag{
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+
+/* ============================================================
+   FAB
+============================================================ */
+.fab{
+  position:fixed;
+  right:24px; bottom:24px;
+  background:var(--secundario);
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  padding:15px 22px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 6px 24px rgba(26,158,92,.35);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  z-index:40;
+  transition:transform .12s ease;
+}
+.fab:hover{transform:translateY(-2px); background:#158049;}
+
+/* ============================================================
+   MODALS
+============================================================ */
+.overlay{
+  position:fixed; inset:0;
+  background:rgba(43,43,38,.45);
+  display:flex; align-items:center; justify-content:center;
+  z-index:100;
+  padding:20px;
+  opacity:0; pointer-events:none;
+  transition:opacity .15s ease;
+}
+.overlay[data-open="true"]{opacity:1; pointer-events:auto;}
+.modal{
+  background:var(--paper);
+  border-radius:18px;
+  max-width:480px;
+  width:100%;
+  max-height:88vh;
+  overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+  transform:translateY(10px);
+  transition:transform .15s ease;
+}
+.overlay[data-open="true"] .modal{transform:translateY(0);}
+.modal-head{
+  padding:20px 24px 14px;
+  border-bottom:1.5px solid var(--paper-line);
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+}
+.modal-head h2{
+  font-family:var(--font-display);
+  font-size:21px;
+  font-weight:600;
+  margin:0;
+}
+.modal-close{
+  border:none;background:none;font-size:20px;cursor:pointer;color:var(--ink-soft);
+  line-height:1; padding:4px;
+}
+.modal-body{padding:18px 24px 24px;}
+
+.field{margin-bottom:16px;}
+.field label{
+  display:block;
+  font-size:12px;
+  font-weight:600;
+  color:var(--ink-soft);
+  margin-bottom:6px;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.field input[type=text],
+.field input[type=date],
+.field input[type=time],
+.field input[type=password],
+.field select,
+.field textarea{
+  width:100%;
+  border:1.5px solid var(--paper-line);
+  border-radius:10px;
+  padding:10px 12px;
+  font-size:14px;
+  background:var(--card);
+  color:var(--ink);
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none; border-color:var(--ink);
+}
+.field.pin input{
+  font-family:var(--font-mono);
+  letter-spacing:.3em;
+  font-size:18px;
+  text-align:center;
+  max-width:140px;
+}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+.check-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.check-item{
+  display:flex; align-items:center; gap:8px;
+  font-size:13px;
+  border:1.5px solid var(--paper-line);
+  border-radius:8px;
+  padding:8px 10px;
+}
+.check-item input{margin:0;}
+
+.btn{
+  border:none;
+  border-radius:10px;
+  padding:11px 18px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  width:100%;
+}
+.btn-primary{background:var(--ink); color:#fff;}
+.btn-primary:hover{background:#000;}
+.btn-secondary{background:transparent; color:var(--ink); border:1.5px solid var(--ink);}
+.btn-danger{background:var(--rechazado); color:#fff;}
+.btn-row{display:flex; gap:10px; margin-top:6px;}
+.btn-row .btn{width:auto; flex:1;}
+.btn:disabled{opacity:.5; cursor:not-allowed;}
+
+.conflict-box{
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:13px;
+  margin-bottom:16px;
+  line-height:1.5;
+}
+.conflict-box.warn{background:var(--pendiente-bg); color:#7A5900; border:1px solid #EAD28A;}
+.conflict-box.ok{background:var(--confirmado-bg); color:#0B6B51; border:1px solid #A9DFCB;}
+.conflict-box ul{margin:6px 0 0; padding-left:18px;}
+
+.detail-row{
+  display:flex;
+  justify-content:space-between;
+  padding:9px 0;
+  border-bottom:1px dashed var(--paper-line);
+  font-size:13px;
+}
+.detail-row span:first-child{color:var(--ink-soft);}
+.detail-row span:last-child{font-weight:600; text-align:right;}
+
+/* ============================================================
+   TOAST
+============================================================ */
+.toast{
+  position:fixed;
+  left:50%; bottom:30px;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--ink);
+  color:#fff;
+  padding:12px 20px;
+  border-radius:10px;
+  font-size:13px;
+  z-index:200;
+  opacity:0;
+  transition:all .2s ease;
+  pointer-events:none;
+  max-width:90vw;
+  text-align:center;
+}
+.toast[data-show="true"]{opacity:1; transform:translateX(-50%) translateY(0);}
+.toast.error{background:var(--rechazado);}
+.toast.success{background:var(--confirmado);}
+
+/* loading */
+.loading-msg{
+  text-align:center;
+  color:var(--ink-faint);
+  font-family:var(--font-mono);
+  font-size:13px;
+  padding:60px 0;
+}
+
+/* mobile */
+@media(max-width:720px){
+  .week-grid{grid-template-columns:repeat(7, 78vw);}
+  .row2{grid-template-columns:1fr;}
+  .check-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-top">
+    <div>
+      <p class="masthead-eyebrow">Coordinación entre niveles</p>
+      <h1>Calendario de Eventos</h1>
+      <p class="institucion" id="nombreInstitucion">&nbsp;</p>
+    </div>
+    <svg class="masthead-doodle" width="86" height="64" viewBox="0 0 86 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <rect x="4" y="38" width="42" height="10" rx="2" fill="var(--inicial-bg)" stroke="var(--inicial)" stroke-width="1.5"/>
+      <rect x="9" y="28" width="38" height="10" rx="2" fill="var(--primario-bg)" stroke="var(--primario)" stroke-width="1.5"/>
+      <rect x="14" y="18" width="34" height="10" rx="2" fill="var(--secundario-bg)" stroke="var(--secundario)" stroke-width="1.5"/>
+      <line x1="50" y1="45" x2="72" y2="15" stroke="#D9A404" stroke-width="5" stroke-linecap="round"/>
+      <path d="M70 17 L82 5 L78 17 Z" fill="#2B2B26"/>
+      <circle cx="50" cy="45" r="4.5" fill="#C1443C"/>
+    </svg>
+  </div>
+</header>
+
+<div class="stats-bar" id="statsBar">
+  <div class="stat-card"><b id="statSemana" style="color:var(--ink)">–</b><span>Esta semana</span></div>
+  <div class="stat-card"><b id="statPendientes" style="color:var(--pendiente)">–</b><span>Pendientes</span></div>
+  <div class="stat-card"><b id="statConfirmados" style="color:var(--confirmado)">–</b><span>Confirmados</span></div>
+  <div class="stat-card"><b id="statConflictos" style="color:var(--rechazado)">–</b><span>Con superposición</span></div>
+</div>
+
+<div class="legend">
+  <span class="legend-item"><i class="ti ti-puzzle" style="color:var(--inicial)"></i>Inicial</span>
+  <span class="legend-item"><i class="ti ti-book-2" style="color:var(--primario)"></i>Primario</span>
+  <span class="legend-item"><i class="ti ti-school" style="color:var(--secundario)"></i>Secundario</span>
+  <span class="legend-item"><span class="dot" style="background:var(--fijo)"></span>Uso habitual</span>
+</div>
+
+<div class="controls">
+  <div class="tabs" id="tabsNivel">
+    <button class="tab" data-nivel="todos" data-active="true">Todos</button>
+    <button class="tab" data-nivel="Inicial">Inicial</button>
+    <button class="tab" data-nivel="Primario">Primario</button>
+    <button class="tab" data-nivel="Secundario">Secundario</button>
+  </div>
+  <div class="controls-right">
+    <select class="select-espacio" id="selectEspacio">
+      <option value="todos">Todos los espacios</option>
+    </select>
+    <button class="btn-exportar" id="btnExportarPdf"><i class="ti ti-download"></i> Exportar PDF</button>
+  </div>
+</div>
+
+<div class="week-nav">
+  <button id="btnPrev" aria-label="Semana anterior"><i class="ti ti-chevron-left"></i></button>
+  <button id="btnNext" aria-label="Semana siguiente"><i class="ti ti-chevron-right"></i></button>
+  <span class="week-label" id="weekLabel">—</span>
+  <button class="btn-hoy" id="btnHoy">Hoy</button>
+</div>
+
+<div class="week-wrap">
+  <div id="weekGrid" class="week-grid">
+    <div class="loading-msg">Cargando calendario…</div>
+  </div>
+</div>
+
+<button class="fab" id="btnNuevo"><i class="ti ti-plus"></i> Cargar evento</button>
+
+<!-- ============ MODAL: NUEVO EVENTO ============ -->
+<div class="overlay" id="overlayNuevo">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Cargar evento</h2>
+      <button class="modal-close" data-close="overlayNuevo"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="formNuevoWrap">
+        <div class="field pin">
+          <label>PIN de tu nivel</label>
+          <input type="password" id="fPin" maxlength="4" inputmode="numeric" placeholder="••••">
+        </div>
+        <div class="field">
+          <label>Espacio</label>
+          <select id="fEspacio"></select>
+        </div>
+        <div class="field">
+          <label>Fecha</label>
+          <input type="date" id="fFecha">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Hora inicio</label>
+            <input type="time" id="fHoraInicio">
+          </div>
+          <div class="field">
+            <label>Hora fin</label>
+            <input type="time" id="fHoraFin">
+          </div>
+        </div>
+        <div class="field">
+          <label>Motivo</label>
+          <input type="text" id="fMotivo" placeholder="Ej: Acto del 9 de julio">
+        </div>
+        <div class="field">
+          <label>Resumen breve (qué se va a hacer)</label>
+          <textarea id="fDescripcion" rows="2" placeholder="Ej: Formación general, entrega de diplomas y número musical a cargo de 6° grado"></textarea>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>¿Concurren padres?</label>
+            <select id="fConcurrenPadres">
+              <option value="">Elegir…</option>
+              <option value="Sí">Sí</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Responsable a cargo</label>
+            <input type="text" id="fResponsable" placeholder="Nombre y apellido">
+          </div>
+        </div>
+        <div class="field">
+          <label>Equipamiento necesario</label>
+          <div class="check-grid" id="fEquipoGrid"></div>
+        </div>
+        <div class="field">
+          <label>Otro equipamiento (opcional)</label>
+          <input type="text" id="fEquipoOtro" placeholder="Especificar">
+        </div>
+        <button class="btn btn-primary" id="btnRevisar">Revisar disponibilidad</button>
+      </div>
+
+      <div id="resultadoRevision" style="display:none">
+        <div id="conflictBox"></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" id="btnVolverEditar">Volver a editar</button>
+          <button class="btn btn-primary" id="btnConfirmarCarga">Confirmar carga</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: DETALLE DE EVENTO ============ -->
+<div class="overlay" id="overlayDetalle">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Detalle del evento</h2>
+      <button class="modal-close" data-close="overlayDetalle"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body" id="detalleBody"></div>
+  </div>
+</div>
+
+<!-- ============ MODAL: PIN PARA EDITAR/CANCELAR ============ -->
+<div class="overlay" id="overlayPin">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="pinModalTitulo">Confirmá tu PIN</h2>
+      <button class="modal-close" data-close="overlayPin"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--ink-soft);margin-top:0">
+        Solo el nivel que cargó este evento puede modificarlo o cancelarlo.
+      </p>
+      <div class="field pin">
+        <label>PIN</label>
+        <input type="password" id="pinConfirm" maxlength="4" inputmode="numeric" placeholder="••••">
+      </div>
+      <button class="btn btn-primary" id="btnPinContinuar">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: EDITAR EVENTO ============ -->
+<div class="overlay" id="overlayEditar">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Editar evento</h2>
+      <button class="modal-close" data-close="overlayEditar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Espacio</label>
+        <select id="eEspacio"></select>
+      </div>
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="eFecha">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Hora inicio</label>
+          <input type="time" id="eHoraInicio">
+        </div>
+        <div class="field">
+          <label>Hora fin</label>
+          <input type="time" id="eHoraFin">
+        </div>
+      </div>
+      <div class="field">
+        <label>Motivo</label>
+        <input type="text" id="eMotivo">
+      </div>
+      <div class="field">
+        <label>Resumen breve (qué se va a hacer)</label>
+        <textarea id="eDescripcion" rows="2"></textarea>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>¿Concurren padres?</label>
+          <select id="eConcurrenPadres">
+            <option value="">Elegir…</option>
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Responsable a cargo</label>
+          <input type="text" id="eResponsable">
+        </div>
+      </div>
+      <div class="field">
+        <label>Equipamiento necesario</label>
+        <div class="check-grid" id="eEquipoGrid"></div>
+      </div>
+      <div class="field">
+        <label>Otro equipamiento (opcional)</label>
+        <input type="text" id="eEquipoOtro">
+      </div>
+      <p style="font-size:12px;color:var(--ink-soft)">Al guardar, el evento vuelve a estado <b>Pendiente</b> y se reenvía para aprobación.</p>
+      <button class="btn btn-primary" id="btnGuardarEdicion">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: EXPORTAR PDF ============ -->
+<div class="overlay" id="overlayExportar">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Exportar calendario a PDF</h2>
+      <button class="modal-close" data-close="overlayExportar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--ink-soft);margin-top:0">
+        El PDF incluye todo lo cargado por los tres niveles (más los usos habituales fijos) en el rango que elijas.
+      </p>
+      <div class="row2">
+        <div class="field">
+          <label>Desde</label>
+          <input type="date" id="pDesde">
+        </div>
+        <div class="field">
+          <label>Hasta</label>
+          <input type="date" id="pHasta">
+        </div>
+      </div>
+      <div class="field">
+        <label>Nivel</label>
+        <select id="pNivel">
+          <option value="todos">Todos los niveles</option>
+          <option value="Inicial">Inicial</option>
+          <option value="Primario">Primario</option>
+          <option value="Secundario">Secundario</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Espacio</label>
+        <select id="pEspacio">
+          <option value="todos">Todos los espacios</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="btnDescargarPdf">Descargar PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN — completar antes de publicar
+============================================================ */
+const CONFIG = {
+  // Pegá acá la URL de la Web App de Apps Script (Implementar > Nueva implementación).
+  API_URL: 'https://script.google.com/macros/s/AKfycbxL-qwmdNr_8ZI-TScp-58wWoZlQ3eZLAnyAx1hF5_jfrUT1PDTsy9zMFcWhcj74i5wSg/exec'
+};
+
+/* ============================================================
+   ESTADO
+============================================================ */
+let DATA = { eventos: [], horariosFijos: [], espacios: [], equipamientoOpciones: [] };
+let filtroNivel = 'todos';
+let filtroEspacio = 'todos';
+let semanaInicio = lunesDeEsta_(new Date());
+let eventoSeleccionadoId = null;
+let pinPendienteAccion = null; // 'editar' | 'cancelar'
+
+const NIVEL_COLOR = { Inicial:'inicial', Primario:'primario', Secundario:'secundario' };
+const DOW = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const DOW_CORTO = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];
+
+/* ============================================================
+   UTILIDADES DE FECHA
+============================================================ */
+function lunesDeEsta_(d){
+  const date = new Date(d);
+  const day = date.getDay(); // 0=domingo
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+function sumarDias_(d, n){
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+function fmtFechaISO_(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+function fmtFechaLarga_(d){
+  return d.toLocaleDateString('es-AR', {day:'numeric', month:'short'});
+}
+function esHoy_(d){
+  const hoy = new Date();
+  return fmtFechaISO_(d) === fmtFechaISO_(hoy);
+}
+
+/* ============================================================
+   API
+============================================================ */
+async function apiGet_(params){
+  const url = CONFIG.API_URL + '?' + new URLSearchParams(params).toString();
+  const res = await fetch(url);
+  return res.json();
+}
+async function apiPost_(payload){
+  const res = await fetch(CONFIG.API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita preflight CORS en Apps Script
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+async function cargarDatos(){
+  if(!CONFIG.API_URL || CONFIG.API_URL.indexOf('PEGAR_AQUI') !== -1){
+    document.getElementById('weekGrid').innerHTML =
+      '<div class="loading-msg">Falta configurar CONFIG.API_URL en index.html con la URL de la Web App.</div>';
+    return;
+  }
+  try{
+    const resp = await apiGet_({ action:'listar' });
+    if(!resp.ok) throw new Error(resp.error || 'Error al cargar datos');
+    DATA = resp;
+    document.getElementById('nombreInstitucion').textContent = resp.nombreInstitucion || '';
+    poblarSelectsEspacio_();
+    poblarEquipamiento_();
+    render();
+  }catch(err){
+    mostrarToast(err.message, 'error');
+    document.getElementById('weekGrid').innerHTML = '<div class="loading-msg">No se pudo cargar el calendario.</div>';
+  }
+}
+
+function poblarSelectsEspacio_(){
+  const filtroSelect = document.getElementById('selectEspacio');
+  filtroSelect.innerHTML = '<option value="todos">Todos los espacios</option>' +
+    DATA.espacios.map(e => `<option value="${e}">${e}</option>`).join('');
+  [document.getElementById('fEspacio'), document.getElementById('eEspacio')].forEach(sel=>{
+    sel.innerHTML = DATA.espacios.map(e => `<option value="${e}">${e}</option>`).join('');
+  });
+  const pEspacio = document.getElementById('pEspacio');
+  pEspacio.innerHTML = '<option value="todos">Todos los espacios</option>' +
+    DATA.espacios.map(e => `<option value="${e}">${e}</option>`).join('');
+}
+
+function poblarEquipamiento_(){
+  [['fEquipoGrid','f'],['eEquipoGrid','e']].forEach(([gridId, prefix])=>{
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = DATA.equipamientoOpciones.map(op => `
+      <label class="check-item">
+        <input type="checkbox" value="${op}" data-prefix="${prefix}">
+        ${op}
+      </label>`).join('');
+  });
+}
+
+/* ============================================================
+   RENDER — GRILLA SEMANAL
+============================================================ */
+function render(){
+  const fin = sumarDias_(semanaInicio, 6);
+  document.getElementById('weekLabel').textContent =
+    fmtFechaLarga_(semanaInicio) + ' — ' + fmtFechaLarga_(fin) + ' · ' + semanaInicio.getFullYear();
+
+  const grid = document.getElementById('weekGrid');
+  grid.innerHTML = '';
+
+  for(let i=0;i<7;i++){
+    const fecha = sumarDias_(semanaInicio, i);
+    const fechaISO = fmtFechaISO_(fecha);
+    const nombreDia = DOW[fecha.getDay()];
+
+    const col = document.createElement('div');
+    col.className = 'day-col';
+
+    const head = document.createElement('div');
+    head.className = 'day-head';
+    head.setAttribute('data-today', esHoy_(fecha));
+    head.innerHTML = `<div class="dow">${DOW_CORTO[fecha.getDay()]}</div><div class="num">${fecha.getDate()}</div>`;
+    col.appendChild(head);
+
+    const items = itemsDelDia_(fechaISO, nombreDia);
+
+    if(items.length === 0){
+      const vacio = document.createElement('div');
+      vacio.className = 'day-empty';
+      vacio.innerHTML = '<i class="ti ti-coffee"></i>Sin novedades';
+      col.appendChild(vacio);
+    } else {
+      items.forEach(it => col.appendChild(fichaElemento_(it)));
+    }
+    grid.appendChild(col);
+  }
+
+  actualizarStats_();
+}
+
+function seSuperponenJS_(iA, fA, iB, fB){
+  return iA < fB && fA > iB;
+}
+
+function actualizarStats_(){
+  let semana = 0, pendientes = 0, confirmados = 0, conflictos = 0;
+
+  for(let i=0;i<7;i++){
+    const fecha = sumarDias_(semanaInicio, i);
+    const fechaISO = fmtFechaISO_(fecha);
+    const nombreDia = DOW[fecha.getDay()];
+
+    const fijos = DATA.horariosFijos.filter(h => h.diaSemana === nombreDia);
+    const eventosDia = DATA.eventos.filter(e => e.fecha === fechaISO && e.estado !== 'Cancelado' && e.estado !== 'Rechazado');
+
+    eventosDia.forEach(ev => {
+      semana++;
+      if(ev.estado === 'Pendiente') pendientes++;
+      if(ev.estado === 'Confirmado') confirmados++;
+
+      const conflictoFijo = fijos.some(h => h.espacio === ev.espacio && seSuperponenJS_(ev.horaInicio, ev.horaFin, h.horaInicio, h.horaFin));
+      const conflictoEvento = eventosDia.some(otro => otro !== ev && otro.espacio === ev.espacio && seSuperponenJS_(ev.horaInicio, ev.horaFin, otro.horaInicio, otro.horaFin));
+      if(conflictoFijo || conflictoEvento) conflictos++;
+    });
+  }
+
+  document.getElementById('statSemana').textContent = semana;
+  document.getElementById('statPendientes').textContent = pendientes;
+  document.getElementById('statConfirmados').textContent = confirmados;
+  document.getElementById('statConflictos').textContent = conflictos;
+}
+
+function itemsDelDia_(fechaISO, nombreDia){
+  const fijos = DATA.horariosFijos
+    .filter(h => h.diaSemana === nombreDia)
+    .filter(h => filtroEspacio === 'todos' || h.espacio === filtroEspacio)
+    .filter(h => filtroNivel === 'todos' || h.nivel === filtroNivel)
+    .map(h => ({ tipo:'fijo', horaInicio:h.horaInicio, horaFin:h.horaFin, espacio:h.espacio, descripcion:h.descripcion, nivel:h.nivel }));
+
+  const eventos = DATA.eventos
+    .filter(e => e.fecha === fechaISO)
+    .filter(e => e.estado !== 'Cancelado')
+    .filter(e => filtroEspacio === 'todos' || e.espacio === filtroEspacio)
+    .filter(e => filtroNivel === 'todos' || e.nivel === filtroNivel)
+    .map(e => ({ tipo:'evento', ...e }));
+
+  return fijos.concat(eventos).sort((a,b) => a.horaInicio.localeCompare(b.horaInicio));
+}
+
+function fichaElemento_(it){
+  const div = document.createElement('div');
+  if(it.tipo === 'fijo'){
+    div.className = 'ficha fijo';
+    div.innerHTML = `
+      <div class="hora">${it.horaInicio}–${it.horaFin}</div>
+      <div class="titulo">${escapeHtml_(it.descripcion || 'Uso habitual')}</div>
+      <div class="meta"><span style="font-size:11px;color:var(--ink-faint)">${escapeHtml_(it.espacio)}</span></div>
+    `;
+  } else {
+    div.className = 'ficha';
+    const colorVar = NIVEL_COLOR[it.nivel] || 'fijo';
+    div.style.setProperty('--tab-color', `var(--${colorVar})`);
+    div.style.setProperty('--tab-bg', `var(--${colorVar}-bg)`);
+    div.innerHTML = `
+      <div class="hora">${it.horaInicio}–${it.horaFin}</div>
+      <div class="titulo">${escapeHtml_(it.motivo)}</div>
+      ${it.responsable ? `<div style="font-size:10px;color:var(--ink-faint);margin-bottom:4px">${escapeHtml_(it.responsable)}</div>` : ''}
+      <div class="meta">
+        <span class="nivel-tag" style="color:var(--${colorVar})">${it.nivel}</span>
+        <span class="badge ${it.estado}">${it.estado}</span>
+      </div>
+    `;
+    div.addEventListener('click', () => abrirDetalle_(it.id));
+  }
+  return div;
+}
+
+function escapeHtml_(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+/* ============================================================
+   FILTROS Y NAVEGACIÓN
+============================================================ */
+document.getElementById('tabsNivel').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.tab');
+  if(!btn) return;
+  filtroNivel = btn.dataset.nivel;
+  document.querySelectorAll('#tabsNivel .tab').forEach(t => t.setAttribute('data-active', t === btn));
+  render();
+});
+document.getElementById('selectEspacio').addEventListener('change', (e)=>{
+  filtroEspacio = e.target.value;
+  render();
+});
+document.getElementById('btnPrev').addEventListener('click', ()=>{ semanaInicio = sumarDias_(semanaInicio, -7); render(); });
+document.getElementById('btnNext').addEventListener('click', ()=>{ semanaInicio = sumarDias_(semanaInicio, 7); render(); });
+document.getElementById('btnHoy').addEventListener('click', ()=>{ semanaInicio = lunesDeEsta_(new Date()); render(); });
+
+/* ============================================================
+   EXPORTAR PDF
+============================================================ */
+function primerDiaMes_(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function ultimoDiaMes_(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+
+document.getElementById('btnExportarPdf').addEventListener('click', ()=>{
+  document.getElementById('pDesde').value = fmtFechaISO_(primerDiaMes_(semanaInicio));
+  document.getElementById('pHasta').value = fmtFechaISO_(ultimoDiaMes_(semanaInicio));
+  document.getElementById('pNivel').value = filtroNivel;
+  document.getElementById('pEspacio').value = filtroEspacio;
+  abrirOverlay_('overlayExportar');
+});
+
+document.getElementById('btnDescargarPdf').addEventListener('click', ()=>{
+  const desde = document.getElementById('pDesde').value;
+  const hasta = document.getElementById('pHasta').value;
+  const nivel = document.getElementById('pNivel').value;
+  const espacio = document.getElementById('pEspacio').value;
+
+  if(!desde || !hasta){ mostrarToast('Elegí el rango de fechas.', 'error'); return; }
+  if(hasta < desde){ mostrarToast('La fecha "hasta" no puede ser anterior a "desde".', 'error'); return; }
+
+  const params = new URLSearchParams({ action:'exportarPdf', desde, hasta, nivel, espacio });
+  window.open(CONFIG.API_URL + '?' + params.toString(), '_blank');
+  cerrarOverlay_('overlayExportar');
+});
+
+/* ============================================================
+   MODAL: NUEVO EVENTO
+============================================================ */
+function abrirOverlay_(id){ document.getElementById(id).setAttribute('data-open','true'); }
+function cerrarOverlay_(id){ document.getElementById(id).setAttribute('data-open','false'); }
+
+document.querySelectorAll('[data-close]').forEach(btn=>{
+  btn.addEventListener('click', ()=> cerrarOverlay_(btn.dataset.close));
+});
+document.querySelectorAll('.overlay').forEach(ov=>{
+  ov.addEventListener('click', (e)=>{ if(e.target === ov) cerrarOverlay_(ov.id); });
+});
+
+document.getElementById('btnNuevo').addEventListener('click', ()=>{
+  resetFormNuevo_();
+  abrirOverlay_('overlayNuevo');
+});
+
+function resetFormNuevo_(){
+  document.getElementById('formNuevoWrap').style.display = 'block';
+  document.getElementById('resultadoRevision').style.display = 'none';
+  document.getElementById('fPin').value = '';
+  document.getElementById('fFecha').value = fmtFechaISO_(new Date());
+  document.getElementById('fHoraInicio').value = '';
+  document.getElementById('fHoraFin').value = '';
+  document.getElementById('fMotivo').value = '';
+  document.getElementById('fDescripcion').value = '';
+  document.getElementById('fConcurrenPadres').value = '';
+  document.getElementById('fResponsable').value = '';
+  document.getElementById('fEquipoOtro').value = '';
+  document.querySelectorAll('#fEquipoGrid input').forEach(c => c.checked = false);
+}
+
+function leerFormNuevo_(){
+  const equipamiento = Array.from(document.querySelectorAll('#fEquipoGrid input:checked')).map(c => c.value);
+  return {
+    pin: document.getElementById('fPin').value.trim(),
+    espacio: document.getElementById('fEspacio').value,
+    fecha: document.getElementById('fFecha').value,
+    horaInicio: document.getElementById('fHoraInicio').value,
+    horaFin: document.getElementById('fHoraFin').value,
+    motivo: document.getElementById('fMotivo').value.trim(),
+    descripcion: document.getElementById('fDescripcion').value.trim(),
+    concurrenPadres: document.getElementById('fConcurrenPadres').value,
+    responsable: document.getElementById('fResponsable').value.trim(),
+    equipamiento,
+    equipamientoOtro: document.getElementById('fEquipoOtro').value.trim()
+  };
+}
+
+function validarFormBasico_(datos){
+  if(!/^\d{4}$/.test(datos.pin)) return 'Ingresá tu PIN de 4 dígitos.';
+  if(!datos.espacio) return 'Elegí un espacio.';
+  if(!datos.fecha) return 'Elegí una fecha.';
+  if(!datos.horaInicio || !datos.horaFin) return 'Completá el horario.';
+  if(datos.horaFin <= datos.horaInicio) return 'La hora de fin debe ser posterior a la de inicio.';
+  if(!datos.motivo) return 'Contá el motivo del evento.';
+  if(!datos.concurrenPadres) return 'Indicá si concurren padres o no.';
+  if(!datos.responsable) return 'Indicá quién está a cargo del evento.';
+  return null;
+}
+
+let ultimosDatosNuevo = null;
+
+document.getElementById('btnRevisar').addEventListener('click', async ()=>{
+  const datos = leerFormNuevo_();
+  const err = validarFormBasico_(datos);
+  if(err){ mostrarToast(err, 'error'); return; }
+
+  setCargando_('btnRevisar', true, 'Revisando…');
+  try{
+    const resp = await apiPost_({ action:'chequearConflictos', espacio:datos.espacio, fecha:datos.fecha, horaInicio:datos.horaInicio, horaFin:datos.horaFin });
+    if(!resp.ok) throw new Error(resp.error);
+    ultimosDatosNuevo = datos;
+    mostrarResultadoRevision_(resp.conflictos);
+  }catch(e){
+    mostrarToast(e.message, 'error');
+  }finally{
+    setCargando_('btnRevisar', false, 'Revisar disponibilidad');
+  }
+});
+
+function mostrarResultadoRevision_(conflictos){
+  document.getElementById('formNuevoWrap').style.display = 'none';
+  document.getElementById('resultadoRevision').style.display = 'block';
+  const box = document.getElementById('conflictBox');
+  if(conflictos.length === 0){
+    box.className = 'conflict-box ok';
+    box.innerHTML = '✓ No hay superposiciones con horarios fijos ni otros eventos.';
+  } else {
+    box.className = 'conflict-box warn';
+    box.innerHTML = '⚠ Este horario se superpone con:<ul>' +
+      conflictos.map(c => `<li>${c.tipo === 'fijo' ? 'Uso habitual' : 'Otro evento'}: ${escapeHtml_(c.descripcion)} (${c.horaInicio}–${c.horaFin}${c.nivel ? ', '+c.nivel : ''})</li>`).join('') +
+      '</ul>Podés cargarlo igual — la coordinación entre niveles se resuelve por fuera del sistema.';
+  }
+}
+
+document.getElementById('btnVolverEditar').addEventListener('click', ()=>{
+  document.getElementById('formNuevoWrap').style.display = 'block';
+  document.getElementById('resultadoRevision').style.display = 'none';
+});
+
+document.getElementById('btnConfirmarCarga').addEventListener('click', async ()=>{
+  if(!ultimosDatosNuevo) return;
+  setCargando_('btnConfirmarCarga', true, 'Guardando…');
+  try{
+    const resp = await apiPost_({ action:'crear', ...ultimosDatosNuevo });
+    if(!resp.ok) throw new Error(resp.error);
+    mostrarToast('Evento cargado. Queda pendiente de aprobación de la Coordinadora.', 'success');
+    cerrarOverlay_('overlayNuevo');
+    cargarDatos();
+  }catch(e){
+    mostrarToast(e.message, 'error');
+  }finally{
+    setCargando_('btnConfirmarCarga', false, 'Confirmar carga');
+  }
+});
+
+/* ============================================================
+   MODAL: DETALLE
+============================================================ */
+function abrirDetalle_(id){
+  const ev = DATA.eventos.find(e => e.id === id);
+  if(!ev) return;
+  eventoSeleccionadoId = id;
+  const colorVar = NIVEL_COLOR[ev.nivel] || 'fijo';
+  const puedeGestionar = ev.estado === 'Pendiente' || ev.estado === 'Confirmado';
+
+  document.getElementById('detalleBody').innerHTML = `
+    <div class="detail-row"><span>Nivel</span><span style="color:var(--${colorVar})">${ev.nivel}</span></div>
+    <div class="detail-row"><span>Espacio</span><span>${escapeHtml_(ev.espacio)}</span></div>
+    <div class="detail-row"><span>Fecha</span><span>${ev.fecha}</span></div>
+    <div class="detail-row"><span>Horario</span><span>${ev.horaInicio} – ${ev.horaFin}</span></div>
+    <div class="detail-row"><span>Motivo</span><span>${escapeHtml_(ev.motivo)}</span></div>
+    ${ev.descripcion ? `<div class="detail-row"><span>Resumen</span><span>${escapeHtml_(ev.descripcion)}</span></div>` : ''}
+    <div class="detail-row"><span>¿Concurren padres?</span><span>${escapeHtml_(ev.concurrenPadres || '—')}</span></div>
+    <div class="detail-row"><span>Responsable</span><span>${escapeHtml_(ev.responsable || '—')}</span></div>
+    <div class="detail-row"><span>Equipamiento</span><span>${escapeHtml_(ev.equipamiento || '—')}${ev.equipamientoOtro ? ' + '+escapeHtml_(ev.equipamientoOtro) : ''}</span></div>
+    <div class="detail-row"><span>Estado</span><span><span class="badge ${ev.estado}">${ev.estado}</span></span></div>
+    ${puedeGestionar ? `
+    <div class="btn-row" style="margin-top:18px">
+      <button class="btn btn-secondary" id="btnPedirEditar">Editar</button>
+      <button class="btn btn-danger" id="btnPedirCancelar">Cancelar evento</button>
+    </div>` : ''}
+  `;
+
+  if(puedeGestionar){
+    document.getElementById('btnPedirEditar').addEventListener('click', ()=>{
+      pinPendienteAccion = 'editar';
+      document.getElementById('pinModalTitulo').textContent = 'PIN para editar';
+      document.getElementById('pinConfirm').value = '';
+      cerrarOverlay_('overlayDetalle');
+      abrirOverlay_('overlayPin');
+    });
+    document.getElementById('btnPedirCancelar').addEventListener('click', ()=>{
+      pinPendienteAccion = 'cancelar';
+      document.getElementById('pinModalTitulo').textContent = 'PIN para cancelar';
+      document.getElementById('pinConfirm').value = '';
+      cerrarOverlay_('overlayDetalle');
+      abrirOverlay_('overlayPin');
+    });
+  }
+
+  abrirOverlay_('overlayDetalle');
+}
+
+/* ============================================================
+   MODAL: PIN → EDITAR / CANCELAR
+============================================================ */
+document.getElementById('btnPinContinuar').addEventListener('click', async ()=>{
+  const pin = document.getElementById('pinConfirm').value.trim();
+  if(!/^\d{4}$/.test(pin)){ mostrarToast('Ingresá un PIN de 4 dígitos.', 'error'); return; }
+
+  if(pinPendienteAccion === 'editar'){
+    cerrarOverlay_('overlayPin');
+    abrirFormularioEdicion_(pin);
+  } else if(pinPendienteAccion === 'cancelar'){
+    setCargando_('btnPinContinuar', true, 'Cancelando…');
+    try{
+      const resp = await apiPost_({ action:'cancelar', id: eventoSeleccionadoId, pin });
+      if(!resp.ok) throw new Error(resp.error);
+      mostrarToast('Evento cancelado.', 'success');
+      cerrarOverlay_('overlayPin');
+      cargarDatos();
+    }catch(e){
+      mostrarToast(e.message, 'error');
+    }finally{
+      setCargando_('btnPinContinuar', false, 'Continuar');
+    }
+  }
+});
+
+/* ============================================================
+   MODAL: EDITAR
+============================================================ */
+let pinEdicionActual = null;
+
+function abrirFormularioEdicion_(pin){
+  pinEdicionActual = pin;
+  const ev = DATA.eventos.find(e => e.id === eventoSeleccionadoId);
+  if(!ev) return;
+
+  document.getElementById('eEspacio').value = ev.espacio;
+  document.getElementById('eFecha').value = ev.fecha;
+  document.getElementById('eHoraInicio').value = ev.horaInicio;
+  document.getElementById('eHoraFin').value = ev.horaFin;
+  document.getElementById('eMotivo').value = ev.motivo;
+  document.getElementById('eDescripcion').value = ev.descripcion || '';
+  document.getElementById('eConcurrenPadres').value = ev.concurrenPadres || '';
+  document.getElementById('eResponsable').value = ev.responsable || '';
+  document.getElementById('eEquipoOtro').value = ev.equipamientoOtro || '';
+
+  const seleccionados = (ev.equipamiento || '').split(',').map(s => s.trim());
+  document.querySelectorAll('#eEquipoGrid input').forEach(c => {
+    c.checked = seleccionados.includes(c.value);
+  });
+
+  abrirOverlay_('overlayEditar');
+}
+
+document.getElementById('btnGuardarEdicion').addEventListener('click', async ()=>{
+  const equipamiento = Array.from(document.querySelectorAll('#eEquipoGrid input:checked')).map(c => c.value);
+  const datos = {
+    action:'editar',
+    id: eventoSeleccionadoId,
+    pin: pinEdicionActual,
+    espacio: document.getElementById('eEspacio').value,
+    fecha: document.getElementById('eFecha').value,
+    horaInicio: document.getElementById('eHoraInicio').value,
+    horaFin: document.getElementById('eHoraFin').value,
+    motivo: document.getElementById('eMotivo').value.trim(),
+    descripcion: document.getElementById('eDescripcion').value.trim(),
+    concurrenPadres: document.getElementById('eConcurrenPadres').value,
+    responsable: document.getElementById('eResponsable').value.trim(),
+    equipamiento,
+    equipamientoOtro: document.getElementById('eEquipoOtro').value.trim()
+  };
+  if(datos.horaFin <= datos.horaInicio){ mostrarToast('La hora de fin debe ser posterior a la de inicio.', 'error'); return; }
+  if(!datos.motivo){ mostrarToast('Contá el motivo del evento.', 'error'); return; }
+  if(!datos.concurrenPadres){ mostrarToast('Indicá si concurren padres o no.', 'error'); return; }
+  if(!datos.responsable){ mostrarToast('Indicá quién está a cargo del evento.', 'error'); return; }
+
+  setCargando_('btnGuardarEdicion', true, 'Guardando…');
+  try{
+    const resp = await apiPost_(datos);
+    if(!resp.ok) throw new Error(resp.error);
+    mostrarToast('Evento actualizado. Vuelve a estar pendiente de aprobación.', 'success');
+    cerrarOverlay_('overlayEditar');
+    cargarDatos();
+  }catch(e){
+    mostrarToast(e.message, 'error');
+  }finally{
+    setCargando_('btnGuardarEdicion', false, 'Guardar cambios');
+  }
+});
+
+/* ============================================================
+   HELPERS UI
+============================================================ */
+function setCargando_(btnId, cargando, texto){
+  const btn = document.getElementById(btnId);
+  btn.disabled = cargando;
+  btn.textContent = texto;
+}
+
+let toastTimeout;
+function mostrarToast(msg, tipo){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (tipo ? ' '+tipo : '');
+  t.setAttribute('data-show','true');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(()=> t.setAttribute('data-show','false'), 4000);
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+cargarDatos();
+</script>
+</body>
+</html>
